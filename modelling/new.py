@@ -15,7 +15,6 @@ def binarize_image(img, threshold=128):
 
 def get_observer_point(image, distance):
     h, w = image.shape
-    center = np.array([w / 2, h / 2, 0])
     observer = np.array([w / 2, h / 2, -distance])
     return observer
 
@@ -25,18 +24,31 @@ def display_image_3d(image, observer, title="Image 3D"):
     z = np.zeros_like(x)
     
     points = np.c_[x.ravel(), y.ravel(), z.ravel()]
-    colors = image.ravel()
+    mask = image.ravel() > 0  # Sélectionner uniquement les pixels blancs
+    valid_points = points[mask]
     
-    cloud = pv.PolyData(points)
-    cloud['intensity'] = colors
+    cloud = pv.PolyData(valid_points)
     
     plotter = pv.Plotter()
-    plotter.add_mesh(cloud, scalars='intensity', cmap='gray', point_size=5)
+    plotter.add_mesh(cloud, color='black', point_size=5)
     plotter.add_points(observer, color='red', point_size=20, label='Observer')
+    
+    # Tracer les droites de projection pour tous les points binarisés
+    projected_points = []
+    for (x, y, _) in valid_points:
+        line = pv.Line(observer, [x, y, 0])
+        plotter.add_mesh(line, color='black')
+        projected_points.append([x, y, 0])
+    
+    # Remplir le volume intérieur en gris
+    projected_points = np.array(projected_points)
+    poly = pv.PolyData(projected_points)
+    plotter.add_mesh(poly.delaunay_2d(), color='gray', opacity=0.5)
+    
     plotter.show(title=title)
 
 # Exemple d'utilisation
-image_path = "/home/hippolytedreyfus/Documents/images2model/images/cross.png"
+image_path =  "/home/hippolytedreyfus/Documents/images2model/images/cross.png"
 image = load_image(image_path)
 binary_image = binarize_image(image)
 observer_point = get_observer_point(binary_image, distance=100)

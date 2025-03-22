@@ -11,27 +11,6 @@ def load_binary_image(image_path):
     return (img > 128).astype(np.uint8)  # Convert to binary mask
 
 
-def make_allowed_space(image1, image2, distance1, distance2, angle):
-    h, w = image1.shape
-    voxel_grid = np.zeros((h, w, w), dtype=np.uint8)  # 3D voxel space
-    
-    angle_rad = np.radians(angle)
-    rotation_matrix = R.from_euler('y', angle_rad, degrees=False).as_matrix()
-    
-    for y in range(h):
-        for x in range(w):
-            if image1[y, x] == 1:
-                z_index = min(int(distance1 * (w // 100)), w - 1)
-                voxel_grid[y, x, z_index] = 1
-            if image2[y, x] == 1:
-                rotated_x, rotated_z = np.dot(rotation_matrix[:2, :2], np.array([x - w//2, w//2]))
-                rotated_x = int(rotated_x + w//2)
-                rotated_z = min(int(distance2 * (w // 100)), w - 1)
-                if 0 <= rotated_x < w:
-                    voxel_grid[y, rotated_x, rotated_z] = 1
-    
-    return voxel_grid
-
 #on prend la premiere image et une distance de vision 
 #et on renvoie l'espace autorisé pour que l'observateur voit l'image
 def define_first_allowed_space(image1, distance1):
