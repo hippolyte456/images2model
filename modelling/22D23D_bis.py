@@ -1,9 +1,10 @@
 import numpy as np
 import cv2
 from scipy.spatial.transform import Rotation as R
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import pdb
+import pyvista as pv
+
+
 
 def load_binary_image(image_path):
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
@@ -32,19 +33,16 @@ def reconstruct_3d(image1, image2, angle):
 
 
 def plot_3d(voxel_grid):
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_zlabel("Z")
-    
     x, y, z = np.where(voxel_grid == 1)
-    ax.scatter(x, y, z, c='black', marker='s')
-    plt.show()
+    cloud = pv.PolyData(np.c_[x, y, z])
+    plotter = pv.Plotter()
+    plotter.add_mesh(cloud, color='black', point_size=5, render_points_as_spheres=True)
+    plotter.show()
 
 
-image1_path = "/home/hippolytedreyfus/Documents/images2model/images/image_circle.png"
-image2_path = "/home/hippolytedreyfus/Documents/images2model/images/image_square.png"
+
+image1_path = "/home/hippolytedreyfus/Documents/images2model/images/cross.png"
+image2_path = "/home/hippolytedreyfus/Documents/images2model/images/circle.png"
 
 
 # Exemple d'utilisation
@@ -52,6 +50,8 @@ image1 = load_binary_image(image1_path)
 image2 = load_binary_image(image2_path)
 angle = 30  # Angle en degrés
 
+
 voxel_grid = reconstruct_3d(image1, image2, angle)
-pdb.set_trace()
+
+
 plot_3d(voxel_grid)
