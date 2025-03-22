@@ -1,0 +1,8 @@
+numpy
+opencv-python
+scipy
+trimesh
+pybullet
+vedo
+scikit-image
+pyvista
