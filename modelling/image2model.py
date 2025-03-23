@@ -8,11 +8,13 @@ class Space3D:
         self.images = []  # Stores loaded image information
         self.scene_center = None
     
-    def add_image(self, image_path, distance):
+    def add_image(self, image_path, distance, observer=None):
         """Adds an image to the 3D space with its projection and relative position."""
         image = self.load_image(image_path)
         binary_image = self.binarize_image(image)
-        observer = self.compute_observer(binary_image, distance)
+        
+        if observer is None:
+            observer = self.compute_observer(binary_image, distance)
         valid_points = self.compute_projection(binary_image)
         
         self.images.append({
@@ -23,7 +25,6 @@ class Space3D:
         })
         
         self.add_projection_to_scene(valid_points, observer)
-        self.update_scene_center()
     
     def load_image(self, image_path):
         """Loads the image in grayscale."""
@@ -79,6 +80,34 @@ class Space3D:
             self.scene_center = np.mean(centers, axis=0)
             self.plotter.add_points(self.scene_center, color='blue', point_size=20, label='Scene Center')
     
+    def compute_observer_from_angle(self, angle, d1, d2):
+        """Computes the observer position for the second image based on an angle and distances."""
+        if self.scene_center is None or len(self.images) == 0:
+            raise ValueError("At least one image must be added before computing an observer from an angle.")
+        
+        observer1 = self.images[0]["observer"]
+        
+        # Define unit vector along the direction from observer1 to scene_center
+        direction = self.scene_center - observer1
+        direction[1] = 0  # Ensure y = 0 (horizontal plane)
+        direction = direction / np.linalg.norm(direction)  # Normalize
+        
+        # Rotate direction by given angle
+        rotation_matrix = np.array([
+            [np.cos(angle), -np.sin(angle), 0],
+            [np.sin(angle), np.cos(angle), 0],
+            [0, 0, 1]
+        ])
+        rotated_direction = rotation_matrix @ direction
+        
+        # Compute new observer position at distance d1 from scene_center
+        observer2 = self.scene_center + rotated_direction * d1
+        
+        # Compute image center at distance d2 from observer2 along the same direction
+        image_center2 = observer2 + rotated_direction * d2
+        
+        return observer2, image_center2
+    
     def show_scene(self):
         """Displays the 3D scene."""
         self.plotter.show()
@@ -87,6 +116,9 @@ class Space3D:
 if __name__ == "__main__":
     space_3d = Space3D()
     space_3d.add_image("/home/hippolytedreyfus/Documents/images2model/images/cross.png", distance=100)
-    space_3d.add_image("/home/hippolytedreyfus/Documents/images2model/images/spiral.png", distance=50)
+    space_3d.update_scene_center()
+    
+    observer2, image_center2 = space_3d.compute_observer_from_angle(np.pi / 4, d1=100, d2=50)
+    space_3d.add_image("/home/hippolytedreyfus/Documents/images2model/images/cross.png", distance=50, observer=observer2)
     
     space_3d.show_scene()
