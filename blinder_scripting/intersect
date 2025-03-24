@@ -1,0 +1,33 @@
+import bpy
+
+# Supprime tous les objets existants pour partir d'une scène propre (optionnel)
+bpy.ops.object.select_all(action='SELECT')
+bpy.ops.object.delete()
+
+# Créer un premier objet (ex : un cube)
+bpy.ops.mesh.primitive_cube_add(size=2, location=(0, 0, 0))
+obj1 = bpy.context.object
+obj1.name = "Cube"
+
+# Créer un deuxième objet (ex : un cylindre qui intersecte le cube)
+bpy.ops.mesh.primitive_cylinder_add(radius=1.2, depth=3, location=(0, 0, 0))
+obj2 = bpy.context.object
+obj2.name = "Cylinder"
+
+# Sélectionner l'objet cible (Cube) et ajouter un modificateur Boolean
+bpy.context.view_layer.objects.active = obj1
+obj1.select_set(True)
+obj2.select_set(False)
+
+# Ajouter le modificateur Boolean (Intersection)
+bool_mod = obj1.modifiers.new(name="Boolean_Intersect", type='BOOLEAN')
+bool_mod.operation = 'INTERSECT'  # Opération d'intersection
+bool_mod.object = obj2  # Appliquer l'opération avec le cylindre
+
+# Appliquer le modificateur pour rendre l'effet permanent
+bpy.ops.object.modifier_apply(modifier=bool_mod.name)
+
+# Supprimer l'objet utilisé pour l'opération (optionnel)
+bpy.data.objects.remove(obj2, do_unlink=True)
+
+print("✅ Intersection terminée et objet mis à jour !")
