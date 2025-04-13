@@ -25,3 +25,5 @@ L'angle entre les deux points de vue.
 
 L'output attendu est :
 Un modèle 3D ou l'ensemble des points de l'espace qu'il faut "remplir" pour obtenir les deux images par projections.
+
+https://www.thingiverse.com/ 
